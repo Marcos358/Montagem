@@ -1,17 +1,14 @@
 import warnings
 warnings.filterwarnings('ignore')
 
-from ftplib import FTP
 import os
-import pandas as pd
-import numpy as np
-from pysus.online_data.SIH import download
-import warnings
-import time
-import plotly
 import sys
+import time
 import psycopg2
+import numpy as np
+import pandas as pd
 from IPython.display import clear_output
+from pysus.online_data.SIH import download
 
 
 with open('senha.txt','r') as f:

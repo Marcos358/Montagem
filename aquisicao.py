@@ -1,16 +1,13 @@
 import warnings
 warnings.filterwarnings('ignore')
 
-from ftplib import FTP
 import os
-import pandas as pd
-import numpy as np
-from pysus.online_data.SIH import download
-import warnings
 import time
-import plotly
-from pyspark.sql import SparkSession
+import numpy as np
+import pandas as pd
+from datetime import datetime
 from IPython.display import clear_output
+from pysus.online_data.SIH import download
 
 
 ### Criando as pastas do diretório
@@ -65,12 +62,12 @@ def extrai(df):
 
     return DIC
 
-from datetime import datetime
 
 estados = ['ac','al','ap','am','ba','ce','df','es','go','ma','mt','ms','mg','pa',
            'pb','pr','pe','pi','rj','rn','rs','ro','rr','sc','se','to','sp']
-anos = list(range(2018,2022))
-meses = [3,6,9,12]
+anos = int(input('Janela de tempo em anos: ')) - 1
+anos = list(range(datetime.now().year - anos, datetime.now().year + 1))
+meses = list(range(1,13))
 
 class Extracao:
     def __init__(self, pasta1 = 'dados', pasta2 = 'dados3'):
@@ -117,21 +114,24 @@ class Extracao:
             _UFs.append(UF)
             for a in anos:
                 for m in meses:
-                    clear_output(wait = True)
-                    c += 1
-                    s = '*' * int(50 * c/T) + '-' * (50 - int(50 * c/T))
-                    print('Extração iniciada \n')
-                    print('Arquivo: ' + UF + '_' + str(a) + '_'+str(m) + '\n'
-                          + s + ' {:.2f}% \n{:.2f}s'.format(100 * c / T, time.time() - t0))
-                    s = str(a) + '_' + str(m) + '.parquet'
-                    if s not in os.listdir(path + '/' + UF):
-                        _c += 1
-                        cur = download(UF,a,m)
-                        cur.to_parquet(path + '/' + UF + '/' + s)
-                        self.pasta1['last_update'] = str(datetime.now())
-                        _anos.append(a)
-                        _meses.append(m)
-                        size += os.path.getsize(path + '/' + UF + '/' + s)
+                    if a == datetime.now().year and m > datetime.now().month - 6:
+                        pass
+                    else:
+                        clear_output(wait = True)
+                        c += 1
+                        s = '*' * int(50 * c/T) + '-' * (50 - int(50 * c/T))
+                        print('Extração iniciada \n')
+                        print('Arquivo: ' + UF + '_' + str(a) + '_'+str(m) + '\n'
+                              + s + ' {:.2f}% \n{:.2f}s'.format(100 * c / T, time.time() - t0))
+                        s = str(a) + '_' + str(m) + '.parquet'
+                        if s not in os.listdir(path + '/' + UF):
+                            _c += 1
+                            cur = download(UF,a,m)
+                            cur.to_parquet(path + '/' + UF + '/' + s)
+                            self.pasta1['last_update'] = str(datetime.now())
+                            _anos.append(a)
+                            _meses.append(m)
+                            size += os.path.getsize(path + '/' + UF + '/' + s)
 
         self.pasta1['size'] = size // 10 ** 6
         
