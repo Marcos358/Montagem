@@ -67,7 +67,7 @@ estados = ['ac','al','ap','am','ba','ce','df','es','go','ma','mt','ms','mg','pa'
            'pb','pr','pe','pi','rj','rn','rs','ro','rr','sc','se','to','sp']
 anos = int(input('Janela de tempo em anos: ')) - 1
 anos = list(range(datetime.now().year - anos, datetime.now().year + 1))
-meses = list(range(1,13))
+meses = list(range(1,2))
 
 class Extracao:
     def __init__(self, pasta1 = 'dados', pasta2 = 'dados3'):
