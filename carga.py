@@ -75,6 +75,7 @@ class Carga:
         self.con.close()
 
         self.Exists = True
+        print('Tabelas criadas')
         
     
     def __insere(self, df, schema, tabela = 'brasil'):
@@ -114,6 +115,7 @@ class Carga:
 
     def envia(self, files = None, schemas = ['Pessoa','Ocorrencia']):
         
+        t0 = time.time()
         self.__open_connection()
         src = self.src
         for sch in schemas:
@@ -126,12 +128,17 @@ class Carga:
             _c = 0
             _erros = 0
             _ac = 0
+            c = 0
 
             for f in files:
+                clear_output(wait = True)
+                _c += 1
+                s = '*' * int(50 * _c/_t) + '-' * (50 - int(50 * _c/_t))
+                print('Q: ' + f + '\n' + s + ' {:.2f}%'. \
+                          format(100 * _c/_t) + '\nErros: {}, Ok: {} \n{:.2f}s \n'. \
+                          format(self.errors, self.inserts, time.time() - t0))
                 if f not in self.loadeds[sch]:
-                    clear_output(wait = True)
-                    _c += 1
-                    s = '*' * int(50 * _c/_t) + '-' * (50 - int(50 * _c/_t))
+                    c += 1
                     df = pd.read_parquet(self.src + '/' + sch + '/' + f)
                     self.__insere(df = df, schema = sch.lower())
                     _aux = pd.read_pickle('loaded_' + sch + '.pkl')
@@ -139,17 +146,15 @@ class Carga:
                     pd.to_pickle(_aux,'loaded_' + sch + '.pkl')
                     self.loadeds = {'Pessoa':pd.read_pickle('loaded_Pessoa.pkl'),
                         'Ocorrencia':pd.read_pickle('loaded_Ocorrencia.pkl')}
-                    print('Q: ' + f + '\n' + s + ' {:.2f}%'. \
-                          format(100 * _c/_t) + '\nErros: {}, Ok: {} \n'. \
-                          format(self.errors, self.inserts))
 
         self.con.commit()
         self.con.close()
-        
+        print('Carga completa: {:.2f}s'.format(time.time() - t0))
+
+
 SIH = Carga()
 SIH.start()
 SIH.envia()
 
-print('Carga finalizada')
 
 

@@ -65,7 +65,6 @@ def extrai(df):
 
     return DIC
 
-
 from datetime import datetime
 
 estados = ['ac','al','ap','am','ba','ce','df','es','go','ma','mt','ms','mg','pa',
@@ -98,8 +97,9 @@ class Extracao:
         self.pasta2['size'] = s // 10 ** 6
 
     def aquis(self, anos = anos, meses = meses, exc = 'sp', path = None):
-        global estados
         
+        t0 = time.time()
+        print('Extração iniciada \n')
         UFs = [input('Algum estado específico? ')]
         if UFs == ['']:
             UFs = estados
@@ -108,16 +108,24 @@ class Extracao:
         if path == None:
             path = self.pasta1['path']
         
+        T = len(UFs) * len(anos) * len(meses)
         c, t0 = 0, time.time()
         _UFs, _anos, _meses = self.estados, self.anos, self.meses
         size = 0
+        _c = 0
         for UF in UFs:
             _UFs.append(UF)
             for a in anos:
                 for m in meses:
+                    clear_output(wait = True)
+                    c += 1
+                    s = '*' * int(50 * c/T) + '-' * (50 - int(50 * c/T))
+                    print('Extração iniciada \n')
+                    print('Arquivo: ' + UF + '_' + str(a) + '_'+str(m) + '\n'
+                          + s + ' {:.2f}% \n{:.2f}s'.format(100 * c / T, time.time() - t0))
                     s = str(a) + '_' + str(m) + '.parquet'
                     if s not in os.listdir(path + '/' + UF):
-                        c += 1
+                        _c += 1
                         cur = download(UF,a,m)
                         cur.to_parquet(path + '/' + UF + '/' + s)
                         self.pasta1['last_update'] = str(datetime.now())
@@ -130,7 +138,7 @@ class Extracao:
         self.estados = list(set(_UFs))
         self.anos = list(set(_anos))
         self.meses = list(set(_meses))           
-        print('Aquisiçao terminou em {:.2f}s \n{} arquivos baixados'.format(time.time() - t0, c))
+        print('Aquisiçao terminou em {:.2f}s \n{} arquivos baixados'.format(time.time() - t0, _c))
         
 
     def padroniza(self, src = None, dst = None):
@@ -146,12 +154,19 @@ class Extracao:
         for e in names:
             UFs.update({e: os.listdir(src + '/' + e)})
 
-        size, c = 0, 0
+        T = sum([len(os.listdir(src + '/' + i)) for i in names])
+        size, c, _c = 0, 0, 0
         for e in names:
             for f in UFs[e]:
+                clear_output(wait = True)
+                c += 1
+                s = '*' * int(50 * c/T) + '-' * (50 - int(50 * c/T))
+                print('Padronização iniciada \n')
+                print('Arquivo: ' + e + '_' + f + '\n' + s + ' {:.2f}% \n{:.2f}s'. \
+                      format(100 * c / T, time.time() - t0))
                 s = e + '_' + f
                 if (s not in os.listdir(dst + '/Pessoa')) or (s not in os.listdir(dst + '/Ocorrencia')):
-                    c += 1
+                    _c += 1
                     cur = pd.read_parquet(src + '/' + e + '/' + f)
                     DIC = extrai(cur)
                     Pessoa = DIC['Pessoa']
@@ -163,7 +178,8 @@ class Extracao:
                     self.pasta2['last_update'] = str(datetime.now())
             
         self.pasta2['size'] = size // 10 ** 6
-        print('Padronização terminou em {:.2f} \n{} arquivos modificados'.format(time.time()-t0, c))
+        print('Padronização terminou em {:.2f}s \n{} arquivos modificados'. \
+              format(time.time()-t0, _c))
         
         
 bd_SIH = Extracao()
